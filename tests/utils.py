@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from tests.schema_converter import SchemaToPythonConverter
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Generator
+    from collections.abc import Generator
+    from typing import Any, Callable
 
 TEST_ROOT = Path(__file__).resolve(strict=True).parent
 

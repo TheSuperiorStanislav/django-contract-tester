@@ -5,7 +5,7 @@ Configuration module for schema section test.
 import configparser
 import pathlib
 from dataclasses import dataclass, field
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional
 
 import toml
 
@@ -22,9 +22,9 @@ class ValidationSettings:
     types: bool = True
     formats: bool = True
     query_parameters: bool = True
-    disabled_types: List[str] = field(default_factory=list)
-    disabled_formats: List[str] = field(default_factory=list)
-    disabled_constraints: List[str] = field(default_factory=list)
+    disabled_types: list[str] = field(default_factory=list)
+    disabled_formats: list[str] = field(default_factory=list)
+    disabled_constraints: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -32,7 +32,7 @@ class OpenAPITestConfig:
     """Configuration dataclass for schema section test."""
 
     case_tester: Optional[Callable[[str], None]] = None
-    ignore_case: Optional[List[str]] = None
+    ignore_case: Optional[list[str]] = None
     validators: Any = None
     reference: str = "root"
     http_message: str = "response"
@@ -42,7 +42,7 @@ class OpenAPITestConfig:
 DEFAULT_CONFIG = OpenAPITestConfig()
 
 
-def _parse_list_value(value: str) -> List[str]:
+def _parse_list_value(value: str) -> list[str]:
     """
     Parse a comma-separated string into a list of strings.
     Handles both single-line and multi-line formats.
@@ -123,7 +123,7 @@ def load_config_from_ini_file(
             ignore_case_value = _parse_list_value(ignore_case_str)
 
         # Parse validation settings
-        validation_data: dict[str, bool | List[str]] = {}
+        validation_data: dict[str, bool | list[str]] = {}
         if config.has_section(validation_section):
             for option in config.options(validation_section):
                 value = config.get(validation_section, option)
@@ -138,7 +138,7 @@ def load_config_from_ini_file(
                     "request_for_non_successful_responses",
                 ):
                     validation_data[option] = _parse_bool_value(value)
-                # List options
+                # list options
                 elif option in (
                     "disabled_types",
                     "disabled_formats",
@@ -151,7 +151,7 @@ def load_config_from_ini_file(
             val = validation_data.get(key, default)
             return val if isinstance(val, bool) else default
 
-        def get_list(key: str) -> List[str]:
+        def get_list(key: str) -> list[str]:
             val = validation_data.get(key, [])
             return val if isinstance(val, list) else []
 

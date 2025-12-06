@@ -171,7 +171,7 @@ class BaseSchemaLoader:
             else:
                 for key, value in reversed(list(resolved_route.kwargs.items())):
                     index = path.rfind(str(value))
-                    path = f"{path[:index]}{{{key}}}{path[index + len(str(value)):]}"
+                    path = f"{path[:index]}{{{key}}}{path[index + len(str(value)) :]}"
                 if "{pk}" in path and api_settings.SCHEMA_COERCE_PATH_PK:  # noqa: FS003
                     path, resolved_route = self.handle_pk_parameter(
                         resolved_route=resolved_route, path=path, method=method
