@@ -41,7 +41,6 @@ class OpenAPIClient(APIClient):
         response_handler = ResponseHandlerFactory.create(
             *args, response=response, **kwargs
         )
-
         self.schema_tester.validate_request(response_handler=response_handler)
         self.schema_tester.validate_response(response_handler=response_handler)
         return response

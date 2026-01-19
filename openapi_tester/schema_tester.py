@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import http
 import json
 import re
@@ -823,7 +824,9 @@ class SchemaTester:
             else deepcopy(global_settings)
         )
 
-        if not current_config.validation.response:
+        if not current_config.validation.response or self._is_endpoint_excluded(
+            response_handler.endpoint(), current_config.validation.excluded_endpoints
+        ):
             return
 
         current_config.http_message = "response"
@@ -853,7 +856,57 @@ class SchemaTester:
     def _should_validate_request(
         self, response_handler: ResponseHandler, test_config: OpenAPITestConfig
     ) -> bool:
+        print(response_handler.endpoint())
+        print(test_config.validation.excluded_endpoints)
+        is_endpoint_excluded = self._is_endpoint_excluded(
+            response_handler.endpoint(), test_config.validation.excluded_endpoints
+        )
+        print(is_endpoint_excluded)
+        if self._is_endpoint_excluded(
+            response_handler.endpoint(), test_config.validation.excluded_endpoints
+        ):
+            return False
         return (
             self._is_successful_response(response_handler.response)
             or test_config.validation.request_for_non_successful_responses
         )
+
+    @staticmethod
+    def _is_endpoint_excluded(endpoint: str, excluded: list[str] | None) -> bool:
+        if not excluded:
+            return False
+
+        http_methods = (
+            "GET ",
+            "POST ",
+            "PUT ",
+            "PATCH ",
+            "DELETE ",
+            "HEAD ",
+            "OPTIONS ",
+            "TRACE ",
+        )
+
+        # Normalize endpoint to uppercase for case-insensitive matching
+        endpoint_upper = endpoint.upper()
+
+        for pattern in excluded:
+            # Normalize pattern to uppercase for case-insensitive matching
+            pattern_upper = pattern.upper()
+
+            # Check if the pattern includes an HTTP method prefix
+            pattern_has_method = pattern_upper.startswith(http_methods)
+
+            if pattern_has_method:
+                # Pattern has method, match against full endpoint (e.g., "GET /api/pets")
+                if fnmatch.fnmatch(endpoint_upper, pattern_upper):
+                    return True
+            else:
+                # Pattern is just a path (e.g., "/api/pets"), extract path from endpoint and match
+                endpoint_parts = endpoint_upper.split(" ", 1)
+                endpoint_path = (
+                    endpoint_parts[1] if len(endpoint_parts) == 2 else endpoint_upper
+                )
+                if fnmatch.fnmatch(endpoint_path, pattern_upper):
+                    return True
+        return False

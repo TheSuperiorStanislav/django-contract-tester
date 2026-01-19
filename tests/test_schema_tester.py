@@ -336,6 +336,27 @@ def test_validate_request_invalid(
         schema_tester.validate_request(response_handler=response_handler)
 
 
+def test_validate_request_invalid_endpoint_excluded(
+    response_factory, pets_api_schema: Path, pets_delete_request: GenericRequest
+):
+    schema_tester = SchemaTester(schema_file_path=str(pets_api_schema))
+    response = response_factory(
+        schema=None,
+        url_fragment="/api/pets/1",
+        method="DELETE",
+        status_code=204,
+        request=pets_delete_request,
+    )
+    response_handler = ResponseHandlerFactory.create(response=response)
+    openapi_test_config = OpenAPITestConfig(
+        validation=ValidationSettings(excluded_endpoints=["DELETE /api/pets/*"])
+    )
+
+    schema_tester.validate_request(
+        response_handler=response_handler, test_config=openapi_test_config
+    )
+
+
 def test_validate_request_invalid_request_disabled(
     response_factory,
     pets_api_schema: Path,
@@ -819,4 +840,21 @@ def test_get_paths_object_path_prefix(pets_api_schema_prefix_in_server: Path):
     )
     paths_object = schema_tester.get_paths_object()
 
-    assert list(paths_object.keys()) == ["/api/pets", "/api/pets/{id}"]
+    assert list[str](paths_object.keys()) == ["/api/pets", "/api/pets/{id}"]
+
+
+def test_is_endpoint_excluded():
+    assert tester._is_endpoint_excluded("GET /api/pets", None) is False
+    assert tester._is_endpoint_excluded("GET /api/pets", ["GET /api/pets"]) is True
+    assert tester._is_endpoint_excluded("GET /api/pets", ["GET /api/pets/*"]) is False
+    assert tester._is_endpoint_excluded("GET /api/pets/1", ["GET /api/pets/*"]) is True
+    assert (
+        tester._is_endpoint_excluded("POST /api/pets/type", ["/api/pets/type"]) is True
+    )
+    assert (
+        tester._is_endpoint_excluded("delete /api/pets/1", ["DELETE /api/pets/*"])
+        is True
+    )
+    assert (
+        tester._is_endpoint_excluded("PUT /api/pets/type", ["/api/pets/type"]) is True
+    )

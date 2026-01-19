@@ -70,6 +70,9 @@ class ResponseHandler(ABC):
                     normalized_query_params[query_param] = query_params[query_param]
         return normalized_query_params
 
+    @abstractmethod
+    def endpoint(self) -> str: ...
+
 
 class DRFResponseHandler(ResponseHandler):
     """
@@ -99,6 +102,9 @@ class DRFResponseHandler(ResponseHandler):
             headers=self._request_headers,
             query_params=self._request_query_params,
         )
+
+    def endpoint(self) -> str:
+        return f"{self._request_method} {self._request_path}"
 
 
 class DjangoNinjaResponseHandler(ResponseHandler):
@@ -146,3 +152,6 @@ class DjangoNinjaResponseHandler(ResponseHandler):
             return json.loads(request_data)
         except (json.JSONDecodeError, TypeError, ValueError):
             return {}
+
+    def endpoint(self) -> str:
+        return f"{self._request_method} {self._request_path}"

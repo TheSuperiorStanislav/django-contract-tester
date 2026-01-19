@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
 from rest_framework.response import Response
 
 import openapi_tester
-from openapi_tester.config import load_config_from_pyproject_toml
+from openapi_tester.config import OpenAPITestConfig, load_config_from_pyproject_toml
 from openapi_tester.response_handler import GenericRequest
 from tests.schema_converter import SchemaToPythonConverter
 from tests.utils import TEST_ROOT
@@ -33,13 +33,22 @@ def cars_api_schema() -> Path:
 
 
 @pytest.fixture
-def pets_post_request():
+def pets_post_request() -> GenericRequest:
     request_body = MagicMock()
     request_body.read.return_value = b'{"name": "doggie", "tag": "dog"}'
     return GenericRequest(
         method="post",
         path="/api/pets",
         data={"name": "doggie", "tag": "dog"},
+        headers={"Content-Type": "application/json"},
+    )
+
+
+@pytest.fixture
+def pets_delete_request() -> GenericRequest:
+    return GenericRequest(
+        method="delete",
+        path="/api/pets/1",
         headers={"Content-Type": "application/json"},
     )
 
@@ -128,19 +137,10 @@ def ninja_not_installed():
     openapi_tester.clients.TestClient = former_client
 
 
-@pytest.fixture
-def custom_test_config():
-    """
-    Fixture that loads and patches config.settings with the test configuration.
-
-    Usage in tests:
-        def test_something(custom_test_config):
-            # validators will now use the test config from tests/data/config/pyproject.toml
-            ...
-    """
-    test_config_path = TEST_ROOT / "data" / "config" / "pyproject.toml"
-    test_config = load_config_from_pyproject_toml(config_path=test_config_path)
-
+def custom_test_config_factory(
+    config_path: Path,
+) -> Generator[OpenAPITestConfig, None, None]:
+    test_config = load_config_from_pyproject_toml(config_path=config_path)
     with patch("openapi_tester.config.settings", test_config):
         # Also need to patch it in validators module since it's already imported
         with patch("openapi_tester.validators.settings", test_config):
@@ -148,14 +148,21 @@ def custom_test_config():
 
 
 @pytest.fixture
+def custom_test_config():
+    yield from custom_test_config_factory(
+        TEST_ROOT / "data" / "config" / "pyproject.toml"
+    )
+
+
+@pytest.fixture
 def custom_test_config_no_response_validation():
-    """
-    Fixture that loads and patches config.settings with the test configuration.
-    """
-    test_config_path = (
+    yield from custom_test_config_factory(
         TEST_ROOT / "data" / "config" / "pyproject_no_response_validation.toml"
     )
-    test_config = load_config_from_pyproject_toml(config_path=test_config_path)
-    with patch("openapi_tester.config.settings", test_config):
-        with patch("openapi_tester.validators.settings", test_config):
-            yield test_config
+
+
+@pytest.fixture
+def custom_test_config_excluded_endpoints():
+    yield from custom_test_config_factory(
+        TEST_ROOT / "data" / "config" / "django-contract-tester-excluded-endpoints.toml"
+    )

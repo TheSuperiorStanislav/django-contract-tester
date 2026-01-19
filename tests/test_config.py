@@ -11,6 +11,7 @@ from openapi_tester.config import (
 
 def test_default_validation_settings():
     settings = ValidationSettings()
+    assert settings.excluded_endpoints is None
     assert settings.response is True
     assert settings.request is True
     assert settings.request_for_non_successful_responses is False
@@ -31,6 +32,7 @@ def test_load_config_from_pyproject_toml_with_valid_config():
     assert config.ignore_case == ["name", "color", "height", "width", "length"]
 
     # Check validation settings
+    assert config.validation.excluded_endpoints is None
     assert config.validation.request is False
     assert config.validation.request_for_non_successful_responses is False
     assert config.validation.response is True
@@ -207,3 +209,15 @@ def test_load_config_from_ini_file_with_wrong_configs():
 
     assert config.validation.disabled_types == ["not_a_list_but_string"]
     assert config.validation.disabled_formats == ["12345"]
+
+
+def test_load_config_from_ini_file_with_excluded_endpoints():
+    config_path = pathlib.Path(
+        "tests/data/config/.django-contract-tester-excluded-endpoints"
+    )
+    config = load_config_from_ini_file(config_path=config_path)
+
+    assert config.validation.excluded_endpoints == [
+        "GET /api/v1/users/*",
+        "POST /api/v1/users/*",
+    ]

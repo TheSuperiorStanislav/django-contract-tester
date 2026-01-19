@@ -16,6 +16,7 @@ class ValidationSettings:
 
     # pylint: disable=too-many-instance-attributes
     # Eight is reasonable in this case as has the required configuration options
+    excluded_endpoints: Optional[list[str]] = None
     request: bool = True
     request_for_non_successful_responses: bool = False
     response: bool = True
@@ -140,6 +141,7 @@ def load_config_from_ini_file(
                     validation_data[option] = _parse_bool_value(value)
                 # List options
                 elif option in (
+                    "excluded_endpoints",
                     "disabled_types",
                     "disabled_formats",
                     "disabled_constraints",
@@ -156,6 +158,7 @@ def load_config_from_ini_file(
             return val if isinstance(val, list) else []
 
         current_validation_settings = ValidationSettings(
+            excluded_endpoints=get_list("excluded_endpoints"),
             request=get_bool("request", True),
             request_for_non_successful_responses=get_bool(
                 "request_for_non_successful_responses", False
