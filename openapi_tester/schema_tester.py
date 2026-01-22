@@ -856,12 +856,6 @@ class SchemaTester:
     def _should_validate_request(
         self, response_handler: ResponseHandler, test_config: OpenAPITestConfig
     ) -> bool:
-        print(response_handler.endpoint())
-        print(test_config.validation.excluded_endpoints)
-        is_endpoint_excluded = self._is_endpoint_excluded(
-            response_handler.endpoint(), test_config.validation.excluded_endpoints
-        )
-        print(is_endpoint_excluded)
         if self._is_endpoint_excluded(
             response_handler.endpoint(), test_config.validation.excluded_endpoints
         ):

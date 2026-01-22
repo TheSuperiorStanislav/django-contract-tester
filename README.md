@@ -393,10 +393,23 @@ disabled_constraints = [
 ]
 ```
 
+#### Disabling Validation for Endpoints or Paths
+
+You can exclude specific endpoints or entire API paths from validation by adding them to the `excluded_endpoints` list under `[tool.django-contract-tester.validation]` in your `pyproject.toml`.
+For example, if you have an endpoint which is being built and somehow not present in the OpenAPI specs.
+
+```toml
+[tool.django-contract-tester.validation]
+excluded_endpoints = [
+    "GET /api/pets/*",      # Exclude all GET requests to subpaths of /api/pets/. e,g: "GET /api/pets/{id}
+    "POST /api/orders",     # Exclude the POST /api/orders endpoint
+    "/api/health",          # Exclude all methods for /api/health
+]
+```
+
 ## Known Issues
 
-* We are using [prance](https://github.com/jfinkhaeuser/prance) as a schema resolver, and it has some issues with the
-  resolution of (very) complex OpenAPI 2.0 schemas.
+* We are using [prance](https://github.com/jfinkhaeuser/prance) as a schema resolver, and it has some issues with the resolution of (very) complex OpenAPI 2.0 schemas.
 
 ## Contributing
 

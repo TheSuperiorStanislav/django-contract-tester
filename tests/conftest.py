@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Generator
+from typing import TYPE_CHECKING, Callable
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -139,7 +140,7 @@ def ninja_not_installed():
 
 def custom_test_config_factory(
     config_path: Path,
-) -> Generator[OpenAPITestConfig, None, None]:
+) -> Generator[OpenAPITestConfig]:
     test_config = load_config_from_pyproject_toml(config_path=config_path)
     with patch("openapi_tester.config.settings", test_config):
         # Also need to patch it in validators module since it's already imported
