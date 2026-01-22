@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING
 import orjson
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator, Sequence
+    from collections.abc import Iterator, Sequence
+    from typing import Any
 
 
 def merge_objects(dictionaries: Sequence[dict[str, Any]]) -> dict[str, Any]:

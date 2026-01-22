@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from ninja import NinjaAPI, Query, Router
 
@@ -25,7 +25,7 @@ def create_user(request, user: UserIn):
     }
 
 
-@router.get("/profiles", response={200: List[UserProfileOut]})
+@router.get("/profiles", response={200: list[UserProfileOut]})
 def get_user_profile(request, query: Query[UserProfileFilter]):
     return [
         {
@@ -79,7 +79,7 @@ def delete_user(request, user_id: int):
     return
 
 
-@router.get("/", response={200: List[UserOut]})
+@router.get("/", response={200: list[UserOut]})
 def get_users(request):
     return [
         {

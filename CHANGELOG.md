@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.7.1 2025-12-06
+
+* Drop python 3.8 support as minimum support from `openapi-spec-validator` is now `3.9`.
+
 ## 1.5.3 2025-04-28
 
 * Adding `int32` and `int64` format validation support for `integer` values.

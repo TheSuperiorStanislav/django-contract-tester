@@ -153,7 +153,7 @@ def test_validate_format_error(schema: dict, data: str):
     schema_type = schema["type"] if "type" in schema else "object"
     assert (
         message
-        == f'''Expected: a "{schema['format']}" formatted "{schema_type}" value\n\nReceived: "{data}"'''
+        == f'''Expected: a "{schema["format"]}" formatted "{schema_type}" value\n\nReceived: "{data}"'''
     )
 
 
@@ -191,7 +191,7 @@ def test_validate_type_error(schema: dict, data: Union[str, int, bool], article:
     data = f'"{data}"' if isinstance(data, str) else data
     assert (
         message
-        == f"Expected: {article} \"{schema['type']}\" type value\n\nReceived: {data}"
+        == f'Expected: {article} "{schema["type"]}" type value\n\nReceived: {data}'
     )
 
 
