@@ -233,6 +233,12 @@ def load_config_from_pyproject_toml(
 
         validation_data = tool_config.get("validation", {})
 
+        excluded_endpoints_from_toml = validation_data.get("excluded_endpoints")
+        if excluded_endpoints_from_toml is not None and not isinstance(
+            excluded_endpoints_from_toml, list
+        ):
+            excluded_endpoints_from_toml = None
+
         disabled_types_from_toml = validation_data.get("disabled_types")
         if disabled_types_from_toml is not None and not isinstance(
             disabled_types_from_toml, list
@@ -252,6 +258,7 @@ def load_config_from_pyproject_toml(
             disabled_constraints_from_toml = []
 
         current_validation_settings = ValidationSettings(
+            excluded_endpoints=excluded_endpoints_from_toml,
             request=validation_data.get("request", True),
             request_for_non_successful_responses=validation_data.get(
                 "request_for_non_successful_responses", False
