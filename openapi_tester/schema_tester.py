@@ -763,6 +763,11 @@ class SchemaTester:
         if not current_config.validation.request:
             return
 
+        if self._is_endpoint_excluded(
+            response_handler.endpoint(), current_config.validation.excluded_endpoints
+        ):
+            return
+
         if not self._should_validate_request(
             response_handler=response_handler, test_config=current_config
         ):
@@ -882,11 +887,12 @@ class SchemaTester:
         )
 
         # Normalize endpoint to uppercase for case-insensitive matching
-        endpoint_upper = endpoint.upper()
+        # and strip trailing slashes for consistent matching
+        endpoint_upper = endpoint.upper().rstrip("/")
 
         for pattern in excluded:
-            # Normalize pattern to uppercase for case-insensitive matching
-            pattern_upper = pattern.upper()
+            # Normalize pattern to uppercase and strip trailing slashes
+            pattern_upper = pattern.upper().rstrip("/")
 
             # Check if the pattern includes an HTTP method prefix
             pattern_has_method = pattern_upper.startswith(http_methods)

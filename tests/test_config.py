@@ -64,6 +64,7 @@ def test_load_config_from_pyproject_toml_with_nonexistent_file():
 
     # Should return default config
     assert config.ignore_case == DEFAULT_CONFIG.ignore_case
+    assert config.validation.excluded_endpoints is None
     assert config.validation.request is True
     assert config.validation.request_for_non_successful_responses is False
     assert config.validation.response is True
@@ -211,11 +212,9 @@ def test_load_config_from_ini_file_with_wrong_configs():
     assert config.validation.disabled_formats == ["12345"]
 
 
-def test_load_config_from_ini_file_with_excluded_endpoints():
-    config_path = pathlib.Path(
-        "tests/data/config/.django-contract-tester-excluded-endpoints"
-    )
-    config = load_config_from_ini_file(config_path=config_path)
+def test_load_config_from_pyproject_toml_file_with_excluded_endpoints():
+    config_path = pathlib.Path("tests/data/config/pyproject_excluded_endpoints.toml")
+    config = load_config_from_pyproject_toml(config_path=config_path)
 
     assert config.validation.excluded_endpoints == [
         "GET /api/v1/users/*",

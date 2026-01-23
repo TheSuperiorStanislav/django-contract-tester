@@ -843,18 +843,147 @@ def test_get_paths_object_path_prefix(pets_api_schema_prefix_in_server: Path):
     assert list[str](paths_object.keys()) == ["/api/pets", "/api/pets/{id}"]
 
 
-def test_is_endpoint_excluded():
+def test_is_endpoint_excluded_none_list_returns_false():
     assert tester._is_endpoint_excluded("GET /api/pets", None) is False
+
+
+def test_is_endpoint_excluded_empty_list_returns_false():
+    assert tester._is_endpoint_excluded("GET /api/pets", []) is False
+
+
+def test_is_endpoint_excluded_exact_match_with_method():
     assert tester._is_endpoint_excluded("GET /api/pets", ["GET /api/pets"]) is True
+
+
+def test_is_endpoint_excluded_no_match_returns_false():
+    """When endpoint doesn't match any pattern, should return False."""
+    assert tester._is_endpoint_excluded("GET /api/pets", ["GET /api/users"]) is False
+    assert tester._is_endpoint_excluded("GET /api/pets", ["POST /api/pets"]) is False
+
+
+def test_is_endpoint_excluded_wildcard_pattern_matching():
     assert tester._is_endpoint_excluded("GET /api/pets", ["GET /api/pets/*"]) is False
     assert tester._is_endpoint_excluded("GET /api/pets/1", ["GET /api/pets/*"]) is True
     assert (
-        tester._is_endpoint_excluded("POST /api/pets/type", ["/api/pets/type"]) is True
+        tester._is_endpoint_excluded("GET /api/pets/1/details", ["GET /api/pets/*"])
+        is True
     )
+    assert (
+        tester._is_endpoint_excluded(
+            "GET /api/pets/1/details", ["GET /api/pets/*/details"]
+        )
+        is True
+    )
+    assert (
+        tester._is_endpoint_excluded(
+            "GET /api/pets/123/comments", ["GET /api/pets/*/comments"]
+        )
+        is True
+    )
+    assert (
+        tester._is_endpoint_excluded(
+            "GET /api/pets/123/reviews", ["GET /api/pets/*/comments"]
+        )
+        is False
+    )
+
+
+def test_is_endpoint_excluded_question_mark_wildcard():
+    assert tester._is_endpoint_excluded("GET /api/pets/1", ["GET /api/pets/?"]) is True
+    assert (
+        tester._is_endpoint_excluded("GET /api/pets/12", ["GET /api/pets/?"]) is False
+    )
+    assert (
+        tester._is_endpoint_excluded("GET /api/pets/12", ["GET /api/pets/??"]) is True
+    )
+
+
+def test_is_endpoint_excluded_path_only_pattern_matches_any_method():
+    assert tester._is_endpoint_excluded("GET /api/pets", ["/api/pets"]) is True
+    assert tester._is_endpoint_excluded("POST /api/pets", ["/api/pets"]) is True
+    assert (
+        tester._is_endpoint_excluded("PUT /api/pets/type", ["/api/pets/type"]) is True
+    )
+    assert tester._is_endpoint_excluded("DELETE /api/pets/1", ["/api/pets/*"]) is True
+
+
+def test_is_endpoint_excluded_case_insensitive_method():
+    assert tester._is_endpoint_excluded("get /api/pets", ["GET /api/pets"]) is True
+    assert tester._is_endpoint_excluded("GET /api/pets", ["get /api/pets"]) is True
     assert (
         tester._is_endpoint_excluded("delete /api/pets/1", ["DELETE /api/pets/*"])
         is True
     )
+    assert tester._is_endpoint_excluded("Post /api/pets", ["POST /api/pets"]) is True
+
+
+def test_is_endpoint_excluded_case_insensitive_path():
+    """Path matching should be case-insensitive."""
+    assert tester._is_endpoint_excluded("GET /API/PETS", ["GET /api/pets"]) is True
+    assert tester._is_endpoint_excluded("GET /api/pets", ["GET /API/PETS"]) is True
+    assert tester._is_endpoint_excluded("GET /Api/Pets", ["/api/pets"]) is True
+
+
+def test_is_endpoint_excluded_trailing_slash_normalization():
+    assert tester._is_endpoint_excluded("GET /api/pets/", ["GET /api/pets"]) is True
+    assert tester._is_endpoint_excluded("GET /api/pets", ["GET /api/pets/"]) is True
+    assert tester._is_endpoint_excluded("GET /api/pets/", ["GET /api/pets/"]) is True
+    assert tester._is_endpoint_excluded("POST /api/pets/", ["/api/pets"]) is True
+    assert tester._is_endpoint_excluded("POST /api/pets", ["/api/pets/"]) is True
+
+
+def test_is_endpoint_excluded_all_http_methods():
+    assert tester._is_endpoint_excluded("GET /api/pets", ["GET /api/pets"]) is True
+    assert tester._is_endpoint_excluded("POST /api/pets", ["POST /api/pets"]) is True
+    assert tester._is_endpoint_excluded("PUT /api/pets", ["PUT /api/pets"]) is True
+    assert tester._is_endpoint_excluded("PATCH /api/pets", ["PATCH /api/pets"]) is True
     assert (
-        tester._is_endpoint_excluded("PUT /api/pets/type", ["/api/pets/type"]) is True
+        tester._is_endpoint_excluded("DELETE /api/pets", ["DELETE /api/pets"]) is True
     )
+    assert tester._is_endpoint_excluded("HEAD /api/pets", ["HEAD /api/pets"]) is True
+    assert (
+        tester._is_endpoint_excluded("OPTIONS /api/pets", ["OPTIONS /api/pets"]) is True
+    )
+    assert tester._is_endpoint_excluded("TRACE /api/pets", ["TRACE /api/pets"]) is True
+
+
+def test_is_endpoint_excluded_multiple_patterns():
+    patterns = ["GET /api/users", "GET /api/pets", "GET /api/orders"]
+    assert tester._is_endpoint_excluded("GET /api/pets", patterns) is True
+    assert tester._is_endpoint_excluded("GET /api/users", patterns) is True
+    assert tester._is_endpoint_excluded("GET /api/products", patterns) is False
+
+
+def test_is_endpoint_excluded_mixed_pattern_types():
+    patterns = ["GET /api/users", "/api/pets", "POST /api/orders/*"]
+    assert tester._is_endpoint_excluded("GET /api/users", patterns) is True
+    assert tester._is_endpoint_excluded("DELETE /api/pets", patterns) is True
+    assert tester._is_endpoint_excluded("POST /api/orders/123", patterns) is True
+    assert tester._is_endpoint_excluded("GET /api/orders", patterns) is False
+
+
+def test_is_endpoint_excluded_path_only_with_wildcard():
+    assert tester._is_endpoint_excluded("GET /api/pets/1", ["/api/pets/*"]) is True
+    assert tester._is_endpoint_excluded("POST /api/pets/1", ["/api/pets/*"]) is True
+    assert tester._is_endpoint_excluded("DELETE /api/pets/1", ["/api/pets/*"]) is True
+
+
+def test_should_validate_request_returns_false_when_endpoint_excluded(
+    response_factory, pets_api_schema: Path, pets_delete_request: GenericRequest
+):
+    schema_tester = SchemaTester(schema_file_path=str(pets_api_schema))
+    response = response_factory(
+        schema=None,
+        url_fragment="/api/pets/1",
+        method="DELETE",
+        status_code=204,
+        request=pets_delete_request,
+    )
+    response_handler = ResponseHandlerFactory.create(response=response)
+    test_config = OpenAPITestConfig(
+        validation=ValidationSettings(excluded_endpoints=["DELETE /api/pets/*"])
+    )
+
+    result = schema_tester._should_validate_request(response_handler, test_config)
+
+    assert result is False

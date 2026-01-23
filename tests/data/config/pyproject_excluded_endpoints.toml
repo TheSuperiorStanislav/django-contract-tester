@@ -1,0 +1,5 @@
+[tool.django-contract-tester.validation]
+excluded_endpoints = [
+    "GET /api/v1/users/*",
+    "POST /api/v1/users/*"
+]
