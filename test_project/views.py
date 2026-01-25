@@ -1,4 +1,4 @@
-# flake8: noqa: U100
+# ruff: noqa: ARG001
 from typing import Union
 
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect

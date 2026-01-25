@@ -16,6 +16,7 @@ class ValidationSettings:
 
     # pylint: disable=too-many-instance-attributes
     # Eight is reasonable in this case as has the required configuration options
+    excluded_endpoints: Optional[list[str]] = None
     request: bool = True
     request_for_non_successful_responses: bool = False
     response: bool = True
@@ -140,6 +141,7 @@ def load_config_from_ini_file(
                     validation_data[option] = _parse_bool_value(value)
                 # list options
                 elif option in (
+                    "excluded_endpoints",
                     "disabled_types",
                     "disabled_formats",
                     "disabled_constraints",
@@ -156,6 +158,7 @@ def load_config_from_ini_file(
             return val if isinstance(val, list) else []
 
         current_validation_settings = ValidationSettings(
+            excluded_endpoints=get_list("excluded_endpoints"),
             request=get_bool("request", True),
             request_for_non_successful_responses=get_bool(
                 "request_for_non_successful_responses", False
@@ -230,6 +233,12 @@ def load_config_from_pyproject_toml(
 
         validation_data = tool_config.get("validation", {})
 
+        excluded_endpoints_from_toml = validation_data.get("excluded_endpoints")
+        if excluded_endpoints_from_toml is not None and not isinstance(
+            excluded_endpoints_from_toml, list
+        ):
+            excluded_endpoints_from_toml = None
+
         disabled_types_from_toml = validation_data.get("disabled_types")
         if disabled_types_from_toml is not None and not isinstance(
             disabled_types_from_toml, list
@@ -249,6 +258,7 @@ def load_config_from_pyproject_toml(
             disabled_constraints_from_toml = []
 
         current_validation_settings = ValidationSettings(
+            excluded_endpoints=excluded_endpoints_from_toml,
             request=validation_data.get("request", True),
             request_for_non_successful_responses=validation_data.get(
                 "request_for_non_successful_responses", False

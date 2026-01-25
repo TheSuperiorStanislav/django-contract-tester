@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.8.0 2026-01-22
+
+* Add feature for excluding endpoints or entire API paths from validation.
+
 ## v1.7.1 2025-12-06
 
 * Drop python 3.8 support as minimum support from `openapi-spec-validator` is now `3.9`.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fnmatch
 import http
 import json
 import re
@@ -762,6 +763,11 @@ class SchemaTester:
         if not current_config.validation.request:
             return
 
+        if self._is_endpoint_excluded(
+            response_handler.endpoint(), current_config.validation.excluded_endpoints
+        ):
+            return
+
         if not self._should_validate_request(
             response_handler=response_handler, test_config=current_config
         ):
@@ -823,7 +829,9 @@ class SchemaTester:
             else deepcopy(global_settings)
         )
 
-        if not current_config.validation.response:
+        if not current_config.validation.response or self._is_endpoint_excluded(
+            response_handler.endpoint(), current_config.validation.excluded_endpoints
+        ):
             return
 
         current_config.http_message = "response"
@@ -853,7 +861,52 @@ class SchemaTester:
     def _should_validate_request(
         self, response_handler: ResponseHandler, test_config: OpenAPITestConfig
     ) -> bool:
+        if self._is_endpoint_excluded(
+            response_handler.endpoint(), test_config.validation.excluded_endpoints
+        ):
+            return False
         return (
             self._is_successful_response(response_handler.response)
             or test_config.validation.request_for_non_successful_responses
         )
+
+    @staticmethod
+    def _is_endpoint_excluded(endpoint: str, excluded: list[str] | None) -> bool:
+        if not excluded:
+            return False
+
+        http_methods = (
+            "GET ",
+            "POST ",
+            "PUT ",
+            "PATCH ",
+            "DELETE ",
+            "HEAD ",
+            "OPTIONS ",
+            "TRACE ",
+        )
+
+        # Normalize endpoint to uppercase for case-insensitive matching
+        # and strip trailing slashes for consistent matching
+        endpoint_upper = endpoint.upper().rstrip("/")
+
+        for pattern in excluded:
+            # Normalize pattern to uppercase and strip trailing slashes
+            pattern_upper = pattern.upper().rstrip("/")
+
+            # Check if the pattern includes an HTTP method prefix
+            pattern_has_method = pattern_upper.startswith(http_methods)
+
+            if pattern_has_method:
+                # Pattern has method, match against full endpoint (e.g., "GET /api/pets")
+                if fnmatch.fnmatch(endpoint_upper, pattern_upper):
+                    return True
+            else:
+                # Pattern is just a path (e.g., "/api/pets"), extract path from endpoint and match
+                endpoint_parts = endpoint_upper.split(" ", 1)
+                endpoint_path = (
+                    endpoint_parts[1] if len(endpoint_parts) == 2 else endpoint_upper
+                )
+                if fnmatch.fnmatch(endpoint_path, pattern_upper):
+                    return True
+        return False

@@ -40,7 +40,7 @@ def response_factory(
 
 def iterate_schema(
     schema: dict,
-) -> Generator[tuple[dict | None, Response | None, str], None, None]:
+) -> Generator[tuple[dict | None, Response | None, str]]:
     for url_fragment, path_object in schema["paths"].items():
         for method, method_object in path_object.items():
             if method.lower() != "parameters":
@@ -54,7 +54,7 @@ def iterate_schema(
                             schema_section = responses_object["content"][
                                 "application/json"
                             ]["schema"]
-                        elif "schema" in responses_object:  # noqa: SIM908
+                        elif "schema" in responses_object:
                             schema_section = responses_object["schema"]
                     if schema_section:
                         response = response_factory(
