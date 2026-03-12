@@ -76,7 +76,7 @@ if TYPE_CHECKING:
 
 
 class SchemaTester:
-    """Schema Tester: this is the base class of the library."""
+    """Schema Tester: this is the base class of the django-contract-tester library"""
 
     loader: (
         StaticSchemaLoader
